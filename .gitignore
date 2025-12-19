@@ -52,3 +52,10 @@ coverage/
 # =========================
 *.tmp
 *.swp
+
+# Prisma generated client
+node_modules/
+src/generated/
+
+# Build output
+dist/
