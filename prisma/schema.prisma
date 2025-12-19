@@ -5,3 +5,124 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+//////////////////////
+// ENUMS
+//////////////////////
+
+enum GroupRole {
+  ADMIN
+  MEMBER
+}
+
+enum SplitType {
+  EQUAL
+  EXACT
+  PERCENTAGE
+}
+
+//////////////////////
+// USER
+//////////////////////
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  groupMemberships GroupMember[]
+  expensesPaid     Expense[]        @relation("ExpensePayer")
+  expenseSplits    ExpenseSplit[]
+  settlementsSent  Settlement[]     @relation("SettlementSender")
+  settlementsRecv  Settlement[]     @relation("SettlementReceiver")
+}
+
+//////////////////////
+// GROUP
+//////////////////////
+
+model Group {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  members     GroupMember[]
+  expenses    Expense[]
+  settlements Settlement[]
+}
+
+//////////////////////
+// GROUP MEMBER
+//////////////////////
+
+model GroupMember {
+  id        String    @id @default(uuid())
+  userId    String
+  groupId   String
+  role      GroupRole
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, groupId])
+}
+
+//////////////////////
+// EXPENSE
+//////////////////////
+
+model Expense {
+  id          String    @id @default(uuid())
+  groupId     String
+  payerId     String
+  description String
+  amount      Int
+  splitType   SplitType
+  createdAt   DateTime  @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  payer User  @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: Restrict)
+
+  splits ExpenseSplit[]
+
+  @@index([groupId])
+}
+
+//////////////////////
+// EXPENSE SPLIT
+//////////////////////
+
+model ExpenseSplit {
+  id        String   @id @default(uuid())
+  expenseId String
+  userId    String
+  amount    Int
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([expenseId, userId])
+}
+
+//////////////////////
+// SETTLEMENT
+//////////////////////
+
+model Settlement {
+  id        String   @id @default(uuid())
+  groupId   String
+  fromUserId String
+  toUserId   String
+  amount    Int
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  fromUser User @relation("SettlementSender", fields: [fromUserId], references: [id], onDelete: Restrict)
+  toUser   User @relation("SettlementReceiver", fields: [toUserId], references: [id], onDelete: Restrict)
+
+  @@index([groupId])
+}
