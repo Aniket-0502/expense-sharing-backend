@@ -201,8 +201,7 @@ npx prisma studio
 │   ├── middlewares/     # Auth & validation middleware
 │   ├── routes/          # API route definitions
 │   ├── services/        # Business logic layer
-│   ├── repositories/    # Database access layer
-│   └── types/           # TypeScript type definitions
+│   └──repositories/    # Database access layer
 ├── prisma/
 │   ├── schema.prisma    # Database schema
 │   └── migrations/      # Database migrations
